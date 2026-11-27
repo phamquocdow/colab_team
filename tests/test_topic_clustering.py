@@ -10,10 +10,20 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import Normalizer
 
-from topic_clustering import article_tables, keyword_table, predict_topics
+from topic_clustering import article_tables, evaluate_labels, keyword_table, predict_topics
 
 
 class TopicClusteringTests(unittest.TestCase):
+    def test_lsa_indices_use_all_articles_not_only_silhouette_sample(self):
+        # Two identical squares, centers 10 units apart: CH=75, DB=2*sqrt(2)/10.
+        square = np.array([[0., 0.], [0., 2.], [2., 0.], [2., 2.]])
+        dense = np.vstack([square, square + [10., 0.]])
+        labels = np.repeat([0, 1], 4)
+        indices = np.array([0, 1, 4, 5])
+        scores = evaluate_labels(dense, csr_matrix(dense[indices]), labels, indices)
+        self.assertAlmostEqual(scores["Calinski-Harabasz LSA"], 75.)
+        self.assertAlmostEqual(scores["Davies-Bouldin LSA"], np.sqrt(2) / 5)
+
     def test_keyword_support_and_weight_export(self):
         matrix = csr_matrix([[1., 0, 1], [1., 0, 0], [0, 1., 0], [0, 1., 0]])
         table = keyword_table(matrix, np.array(["court", "korea", "rare"]),

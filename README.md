@@ -123,17 +123,53 @@ python -m unittest discover -s tests -v
   Phân tích chi tiết ở cuối notebook 4.
 
 **Phân cụm theo chủ đề** (TF-IDF unigram + bigram, lọc từ văn phong → LSA 100 chiều → K-Means):
-- Khảo sát liên tiếp K = 2 đến 16, mỗi K chạy ba seed và `n_init=10`. Hiển thị silhouette, độ ổn định ARI, tỷ lệ cụm và inertia để chọn K thủ công, giải thích lựa chọn; không dùng nhãn Fake/True hay `subject` để chọn.
-- Đã chạy đủ K=2 đến 16; cell chọn thủ công hiện giữ **K = 10** trên **38.820 bài**. Một bài không còn đặc trưng nhận `cluster=-1` và được ghi riêng.
-- Với mẫu 3.000 bài: cosine silhouette TF-IDF = **0.01234**, silhouette Euclidean LSA = **0.05791**, ARI ổn định giữa ba seed = **0.9889**.
-- K=16 có cosine silhouette cao nhất (0.013526) nhưng ARI chỉ 0.667300. K=13 đạt silhouette 0.013039, ARI 0.792211. K=9–10 đều ổn định (ARI khoảng 0.989–0.990); giữ K=10 là lựa chọn thủ công ưu tiên độ ổn định, không phải tối ưu theo mọi chỉ số. Silhouette còn thấp, cần đọc bài đại diện để kiểm tra chủ đề.
-- Các nhóm dễ nhận diện gồm Trung Đông, Clinton/email, bầu cử sơ bộ Mỹ, cảnh sát, thuế/y tế, Nga–FBI, Triều Tiên và Châu Âu–Brexit.
-  Vẫn còn các cụm chính trị–xã hội Mỹ và chính quyền/pháp luật/kinh tế khá rộng; cần đọc bài đại diện để kiểm tra.
-- Đối chiếu nhãn sau khi chốt mô hình: ARI ≈ 0.117, Cramér's V ≈ 0.643, purity ≈ 0.785 so với mốc ≈ 0.539.
-  Những chỉ số này mô tả liên hệ với nhãn Fake/True, **không đo độ chính xác chủ đề**.
+
+- Đã chạy đủ **K=2 đến 16**, ba seed (42, 17, 93), `n_init=10`, tổng cộng 45 lần thử. K-Means học trên **38.820 bài**; một bài không có đặc trưng nhận `-1`.
+- **Chọn thủ công K=9**. Silhouette được tính trên cùng mẫu ngẫu nhiên cố định 3.000 bài; CH/DB dùng toàn bộ LSA đã chuẩn hóa. Nhãn Fake/True và `subject` chỉ được xem sau khi chốt K.
+- Trung bình qua ba seed tại K=9: cosine silhouette **0,012154**, silhouette Euclidean LSA **0,056464**, CH **896,89**, DB **3,48726**, ARI ổn định **0,989994**. Std của cosine silhouette khoảng **0,00001379**, CH **0,00163**, DB **0,00056**.
+- Mô hình cuối giữ đúng seed 42: cosine silhouette **0,012136**, silhouette Euclidean **0,056370**, CH **896,89**, DB **3,48653**, inertia **27.029,79**. `final_metrics.csv` ghi chỉ số mô hình này; `k_selection.csv` ghi tổng hợp các seed. ARI ổn định là chỉ số so các lần chạy với nhau, không phải độ chính xác 99%.
+
+**Vì sao chọn K=9?**
+
+| K | Cosine silhouette ↑ | CH ↑ | DB ↓ | ARI ổn định ↑ |
+|---|---:|---:|---:|---:|
+| 7 | 0,011770 | 980,41 | 3,65387 | 0,99014 |
+| 8 | 0,011979 | 936,37 | 3,59472 | 0,98586 |
+| **9** | **0,012154** | **896,89** | **3,48726** | **0,98999** |
+| 10 | 0,012343 | 862,52 | 3,51421 | 0,98893 |
+| 13 | 0,013039 | 775,20 | 3,48490 | 0,79221 |
+| 16 | 0,013526 | 708,67 | 3,35219 | 0,66730 |
+
+- So với K=7–8, K=9 có silhouette cao hơn và DB thấp hơn, vẫn giữ ARI gần 0,99; đổi lại CH giảm.
+- So với K=10, CH tăng khoảng **3,98%**, DB giảm **0,77%**, ARI nhỉnh hơn và ít hơn một cụm. Chấp nhận cosine silhouette giảm khoảng **0,000189** (1,53% so với K=10), silhouette Euclidean giảm và inertia tăng. Không có kiểm định về ý nghĩa thống kê của các chênh lệch nhỏ; K=10 vẫn là một phương án có cơ sở.
+- K=11–16 có ARI khoảng **0,579–0,792**, thấp hơn K=9. K=13 có DB gần K=9 nhưng dao động DB qua seed lớn hơn (std 0,05390 so với 0,00056). Vì vậy, ưu tiên độ ổn định thay vì chỉ tăng silhouette hoặc giảm DB.
+- K=2 có CH cao nhất (1593,94) và K=4 có ARI cao nhất (0,99952), nhưng silhouette chỉ 0,007683/0,008040 và DB 4,83675/4,33881. Không chọn bằng cách tối đa một chỉ số hoặc đếm số chỉ số thắng; đây là lựa chọn khám phá dựa trên sự đánh đổi.
+- K=16 có silhouette cao nhất và DB thấp nhất ở biên khảo sát. Chưa loại trừ K>16 phù hợp hơn; mở rộng dải là kiểm tra tiếp theo, không được khẳng định K=9 tối ưu toàn cục hay dữ liệu có đúng chín chủ đề.
+
+**Chín cụm của mô hình cuối (seed 42):** tên gợi ý dựa trên từ khóa, tiêu đề và nội dung trích đoạn của bài đại diện; không phải nhãn chủ đề chuẩn.
+
+| Cụm | Số bài | % dữ liệu | Tên chủ đề gợi ý | Nhận xét |
+|---|---:|---:|---|---|
+| 0 | 8.330 | 21,46 | Bình luận chính trị–xã hội Mỹ | Rộng; còn dấu hiệu văn phong và nội dung chồng lấn |
+| 1 | 5.712 | 14,71 | Chính sách Mỹ: thuế, ngân sách, y tế | Nhiều chính sách trong một cụm; không chỉ riêng thuế |
+| 2 | 2.803 | 7,22 | Chính trị châu Âu–EU–Brexit | Bài đại diện gồm Macedonia, Anh và Italy |
+| 3 | 4.667 | 12,02 | Bầu cử Mỹ–Clinton và các ứng viên | Gồm cả tin ứng viên và bình luận; không chỉ email Clinton |
+| 4 | 1.219 | 3,14 | Bán đảo Triều Tiên–hạt nhân–ngoại giao | Chủ đề rõ hơn theo từ khóa và ba bài đại diện |
+| 5 | 7.287 | 18,77 | Tin quốc tế–Trung Đông, Iran/Syria, quân sự | Cụm lớn, phạm vi rộng; cần đọc thêm bài ở ranh giới |
+| 6 | 2.849 | 7,34 | Cảnh sát–súng đạn–tội phạm tại Mỹ | Có cả tin tội phạm và bình luận xã hội |
+| 7 | 2.820 | 7,26 | Tòa án–Tối cao Pháp viện–pháp luật Mỹ | Ba bài đại diện liên quan các vụ việc ở tòa án |
+| 8 | 3.133 | 8,07 | Nga–FBI–điều tra can thiệp bầu cử Mỹ | Nhóm sự kiện/điều tra; chưa chứng minh mọi bài cùng chủ đề |
+
+- Cụm lớn nhất: **8.330 bài (21,46%)**, nhỏ nhất: **1.219 bài (3,14%)**. Mã 0–8 chỉ thuộc mô hình hiện tại.
+- Có **759/3.000 bài mẫu (25,30%) có cosine silhouette âm**. Cụm 0 và 5 có khoảng 57,44% và 51,23% bài mẫu điểm âm; còn chủ đề rộng và ảnh hưởng văn phong. Cụm Triều Tiên có silhouette trung bình mẫu khoảng 0,09940 và không có điểm âm trong 106 bài mẫu; không diễn giải thành chính xác 100%.
+- Đối chiếu sau khi chốt mô hình: ARI với Fake/True **0,136176**, Cramér's V **0,646213**, purity **0,793637**, mốc lớp đông nhất **0,539284**. Các cụm có liên hệ với nhãn/nguồn; đây không phải độ chính xác chủ đề, không được dùng để chọn K.
+- Mô hình nạp lại khớp 30 bài kiểm tra, đầu vào rỗng/không có đặc trưng nhận `-1`, bảng gán cụm đủ 38.821 bài. Chưa đánh giá trên nhãn chủ đề chuẩn hay nguồn dữ liệu mới.
+
+**Câu trả lời ngắn khi bảo vệ:** “Em chọn K=9 sau khi khảo sát K=2–16 trên cùng dữ liệu. K=9 ổn định qua ba seed với ARI gần 0,99. So với K=8, silhouette cao hơn và DB thấp hơn; so với K=10, CH cao hơn, DB thấp hơn, ARI nhỉnh hơn và ít hơn một cụm, trong khi cosine silhouette chỉ thấp hơn khoảng 0,000189. Các K từ 11 trở lên có thể cải thiện một số chỉ số nhưng độ ổn định giảm rõ rệt. Vì vậy, K=9 là lựa chọn đánh đổi trong phạm vi khảo sát, chưa phải số chủ đề đúng duy nhất.”
 
 Các đầu ra chính trong `results/clustering/`:
 - `k_selection.csv`, `k_runs.csv`, `final_metrics.csv`: chỉ số tổng hợp theo K, kết quả từng seed và điểm mô hình đã chọn.
+- CH (cao hơn tốt hơn) và DB (thấp hơn tốt hơn) được tính trên toàn bộ LSA đã chuẩn hóa; bảng tổng hợp có trung bình và độ lệch chuẩn qua ba seed. Silhouette dùng mẫu cố định 3.000 bài.
 - `cluster_summary.csv`, `cluster_keywords.csv`: từ khóa, trọng số TF-IDF, điểm tương phản và tỷ lệ bài chứa từ.
 - `representative_articles.csv`, `boundary_articles.csv`: ba bài gần tâm và hai bài gần ranh giới của mỗi cụm.
 - `cluster_articles.csv`, `excluded_articles.csv`: gán cụm theo `raw_id`, khoảng cách và margin; margin **không phải xác suất**.

@@ -10,7 +10,8 @@ import pandas as pd
 from sklearn.cluster import KMeans
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import ENGLISH_STOP_WORDS, TfidfVectorizer
-from sklearn.metrics import adjusted_rand_score, silhouette_score
+from sklearn.metrics import (adjusted_rand_score, calinski_harabasz_score,
+                             davies_bouldin_score, silhouette_score)
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import Normalizer
 
@@ -51,7 +52,7 @@ def build_features(texts, topic_focused=True, seed=42, dimensions=100):
 
 
 def evaluate_labels(dense, reference_sample, labels, sample_indices):
-    """Use an identical article sample and reference space for all candidates."""
+    """Use fixed samples for silhouettes and all LSA vectors for CH and DB."""
     sample_labels = np.asarray(labels)[sample_indices]
     if not 1 < len(np.unique(sample_labels)) < len(sample_labels):
         raise ValueError("The evaluation sample must contain at least two clusters.")
@@ -61,6 +62,8 @@ def evaluate_labels(dense, reference_sample, labels, sample_indices):
             reference_sample, sample_labels, metric="cosine"),
         "Silhouette LSA Euclidean": silhouette_score(
             dense[sample_indices], sample_labels, metric="euclidean"),
+        "Calinski-Harabasz LSA": calinski_harabasz_score(dense, labels),
+        "Davies-Bouldin LSA": davies_bouldin_score(dense, labels),
         "Min cluster share": counts.min() / counts.sum(),
         "Max cluster share": counts.max() / counts.sum(),
     }
@@ -72,6 +75,7 @@ def search_clusters(dense, reference_sample, sample_indices,
 
     Mean cosine silhouette is measured BEFORE LSA, in the same topic TF-IDF
     space for every K. LSA silhouette is diagnostic rather than the objective.
+    CH and DB use all normalized LSA vectors, with mean/std across seeds.
     Stability is the mean pairwise ARI of cluster assignments across seeds.
     """
     if len(seeds) < 2 or len(set(seeds)) != len(seeds):
@@ -97,6 +101,10 @@ def search_clusters(dense, reference_sample, sample_indices,
             "Silhouette TF-IDF cosine": t["Silhouette TF-IDF cosine"].mean(),
             "Silhouette TF-IDF std": t["Silhouette TF-IDF cosine"].std(ddof=0),
             "Silhouette LSA Euclidean": t["Silhouette LSA Euclidean"].mean(),
+            "Calinski-Harabasz LSA": t["Calinski-Harabasz LSA"].mean(),
+            "Calinski-Harabasz std": t["Calinski-Harabasz LSA"].std(ddof=0),
+            "Davies-Bouldin LSA": t["Davies-Bouldin LSA"].mean(),
+            "Davies-Bouldin std": t["Davies-Bouldin LSA"].std(ddof=0),
             "Stability ARI": np.mean([adjusted_rand_score(a, b)
                                       for a, b in combinations(labels, 2)]),
             "Min cluster share": t["Min cluster share"].min(),
@@ -104,6 +112,8 @@ def search_clusters(dense, reference_sample, sample_indices,
             "Inertia": t["Inertia"].mean(),
         })
         print(f"K={k:2d}: cosine={summary[-1]['Silhouette TF-IDF cosine']:.4f}, "
+              f"CH={summary[-1]['Calinski-Harabasz LSA']:.2f}, "
+              f"DB={summary[-1]['Davies-Bouldin LSA']:.4f}, "
               f"stability={summary[-1]['Stability ARI']:.3f}", flush=True)
     return pd.DataFrame(summary).set_index("K"), pd.DataFrame(runs), models
 

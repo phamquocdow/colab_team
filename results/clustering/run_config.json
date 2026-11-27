@@ -1,6 +1,6 @@
 {
   "tfidf_dtype": "float64",
-  "selected_k": 10,
+  "selected_k": 9,
   "seed": 42,
   "seeds": [
     42,
@@ -30,6 +30,11 @@
   "clustered_articles": 38820,
   "excluded_articles": 1,
   "input": "notebook-3 clean_text",
-  "selection": "manual choice after inspecting k_scores, k_runs and diagnostic plots",
+  "selection": "manual choice after inspecting silhouettes, CH, DB, stability, cluster sizes and inertia",
+  "selection_reason": "K=9 balances high seed stability with lower DB than K=7/8/10; compared with K=10 it has higher CH, slightly higher ARI and fewer clusters, accepting lower silhouettes and higher inertia. Exploratory choice within K=2..16, not a unique optimum.",
+  "metric_scope": {
+    "silhouette": "fixed article sample",
+    "CH_DB": "all normalized LSA vectors"
+  },
   "labels_used_for_selection": false
 }
