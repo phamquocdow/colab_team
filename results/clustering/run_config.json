@@ -9,17 +9,27 @@
   ],
   "n_init": 10,
   "k_values": [
+    2,
+    3,
+    4,
+    5,
     6,
+    7,
     8,
+    9,
     10,
+    11,
     12,
-    14
+    13,
+    14,
+    15,
+    16
   ],
   "lsa_dimensions": 100,
   "sample_size": 3000,
   "clustered_articles": 38820,
   "excluded_articles": 1,
   "input": "notebook-3 clean_text",
-  "selection": "common topic TF-IDF cosine silhouette, stability>=0.75, min share>=0.01, max share<=0.40; tolerance=0.001 then stability and smaller K",
+  "selection": "manual choice after inspecting k_scores, k_runs and diagnostic plots",
   "labels_used_for_selection": false
 }

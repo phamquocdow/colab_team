@@ -123,10 +123,10 @@ python -m unittest discover -s tests -v
   Phân tích chi tiết ở cuối notebook 4.
 
 **Phân cụm theo chủ đề** (TF-IDF unigram + bigram, lọc từ văn phong → LSA 100 chiều → K-Means):
-- Khảo sát K = 6, 8, 10, 12, 14, mỗi K chạy ba seed và `n_init=10`. Hiển thị silhouette, độ ổn định ARI, tỷ lệ cụm và inertia để chọn K thủ công, giải thích lựa chọn; không dùng nhãn Fake/True hay `subject` để chọn.
-- Các số liệu sau thuộc lần chạy trước với **K = 10** trên **38.820 bài**; cần cập nhật sau khi chọn K và chạy lại notebook. Một bài không còn đặc trưng nhận `cluster=-1` và được ghi riêng.
+- Khảo sát liên tiếp K = 2 đến 16, mỗi K chạy ba seed và `n_init=10`. Hiển thị silhouette, độ ổn định ARI, tỷ lệ cụm và inertia để chọn K thủ công, giải thích lựa chọn; không dùng nhãn Fake/True hay `subject` để chọn.
+- Đã chạy đủ K=2 đến 16; cell chọn thủ công hiện giữ **K = 10** trên **38.820 bài**. Một bài không còn đặc trưng nhận `cluster=-1` và được ghi riêng.
 - Với mẫu 3.000 bài: cosine silhouette TF-IDF = **0.01234**, silhouette Euclidean LSA = **0.05791**, ARI ổn định giữa ba seed = **0.9889**.
-- Silhouette còn thấp, cho thấy chủ đề chồng lấn. K=12/14 có cosine silhouette trung bình cao hơn nhưng ARI ổn định chỉ khoảng 0.719/0.706; cần cân nhắc đồng thời các chỉ số khi chọn K.
+- K=16 có cosine silhouette cao nhất (0.013526) nhưng ARI chỉ 0.667300. K=13 đạt silhouette 0.013039, ARI 0.792211. K=9–10 đều ổn định (ARI khoảng 0.989–0.990); giữ K=10 là lựa chọn thủ công ưu tiên độ ổn định, không phải tối ưu theo mọi chỉ số. Silhouette còn thấp, cần đọc bài đại diện để kiểm tra chủ đề.
 - Các nhóm dễ nhận diện gồm Trung Đông, Clinton/email, bầu cử sơ bộ Mỹ, cảnh sát, thuế/y tế, Nga–FBI, Triều Tiên và Châu Âu–Brexit.
   Vẫn còn các cụm chính trị–xã hội Mỹ và chính quyền/pháp luật/kinh tế khá rộng; cần đọc bài đại diện để kiểm tra.
 - Đối chiếu nhãn sau khi chốt mô hình: ARI ≈ 0.117, Cramér's V ≈ 0.643, purity ≈ 0.785 so với mốc ≈ 0.539.

@@ -67,7 +67,7 @@ def evaluate_labels(dense, reference_sample, labels, sample_indices):
 
 
 def search_clusters(dense, reference_sample, sample_indices,
-                    k_values=(6, 8, 10, 12, 14), seeds=(42, 17, 93), n_init=10):
+                    k_values=tuple(range(2, 17)), seeds=(42, 17, 93), n_init=10):
     """Compare K across seeds; keep the first seed's exact fitted estimator.
 
     Mean cosine silhouette is measured BEFORE LSA, in the same topic TF-IDF
