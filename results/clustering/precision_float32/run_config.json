@@ -1,0 +1,24 @@
+{
+  "selected_k": 10,
+  "seed": 42,
+  "seeds": [
+    42,
+    17,
+    93
+  ],
+  "n_init": 10,
+  "k_values": [
+    6,
+    8,
+    10,
+    12,
+    14
+  ],
+  "lsa_dimensions": 100,
+  "sample_size": 3000,
+  "clustered_articles": 38820,
+  "excluded_articles": 1,
+  "input": "notebook-3 clean_text",
+  "selection": "common topic TF-IDF cosine silhouette, stability>=0.75, min share>=0.01, max share<=0.40; tolerance=0.001 then stability and smaller K",
+  "labels_used_for_selection": false
+}

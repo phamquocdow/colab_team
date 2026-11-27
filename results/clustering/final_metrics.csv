@@ -1,0 +1,2 @@
+Model,K,Silhouette TF-IDF cosine,Silhouette LSA Euclidean,Min cluster share,Max cluster share,Stability ARI
+"Mô hình chọn, K=10",10,0.012343662256066144,0.057909557088494226,0.03147861926841834,0.19410097887686759,0.9889256290710775

@@ -1,0 +1,3 @@
+,Accuracy,F1-macro
+Naive Bayes,0.953,0.9527
+Passive-Aggressive,0.9898,0.9898

@@ -1,0 +1,31 @@
+# --- Môi trường Python ---
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+
+# --- Dữ liệu: tải lại bằng notebook 1 (KaggleHub), sinh lại bằng notebook 3 ---
+# Fake.csv / True.csv ~ 60 MB mỗi file, news_clean.csv ~ 67 MB: quá lớn cho git
+data/
+
+# --- Mô hình đã huấn luyện: sinh lại bằng notebook 4, 5 ---
+models/
+*.joblib
+
+# --- Cache / file tạm ---
+cachedir/
+joblib_cache/
+*.tmp
+*.log
+
+# --- Hệ điều hành / IDE ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
