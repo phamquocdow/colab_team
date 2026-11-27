@@ -108,26 +108,6 @@ def search_clusters(dense, reference_sample, sample_indices,
     return pd.DataFrame(summary).set_index("K"), pd.DataFrame(runs), models
 
 
-def select_k(scores, min_stability=0.75, min_share=0.01, max_share=0.4,
-             tolerance=0.001):
-    """Select without labels; reject degenerate/unstable solutions first.
-
-    Within 0.001 cosine silhouette of the best eligible solution, prefer higher
-    stability and then smaller K. Fail explicitly if no candidate qualifies.
-    """
-    eligible = scores[(scores["Stability ARI"] >= min_stability)
-                      & (scores["Min cluster share"] >= min_share)
-                      & (scores["Max cluster share"] <= max_share)]
-    if eligible.empty:
-        raise ValueError("No K passes the declared stability/size constraints. "
-                         "Inspect k_selection.csv before changing thresholds.")
-    near_best = eligible[eligible["Silhouette TF-IDF cosine"]
-                         >= eligible["Silhouette TF-IDF cosine"].max() - tolerance]
-    ranked = near_best.reset_index().sort_values(
-        ["Stability ARI", "K"], ascending=[False, True])
-    return int(ranked.iloc[0]["K"])
-
-
 def keyword_table(sparse, terms, labels, top_n=15, min_document_share=0.01):
     """Rank salient words/phrases using mean TF-IDF times log(1 + lift).
 

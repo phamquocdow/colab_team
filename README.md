@@ -15,10 +15,10 @@ Dữ liệu: [Fake and Real News Dataset (Kaggle)](https://www.kaggle.com/datase
 | `2_eda.ipynb` | Khám phá dữ liệu: phân bố nhãn, độ dài, chuyên mục, dấu hiệu nguồn tin, từ phổ biến |
 | `3_tien_xu_ly_van_ban.ipynb` | Tiền xử lý, khử bài rỗng/trùng lặp → `data/processed/news_clean.csv` |
 | `4_hoc_co_giam_sat.ipynb` | Pipeline TF-IDF + NB / PA, chọn tham số bằng CV, đánh giá test, kiểm tra gần trùng, từ khóa, dự đoán bài mới |
-| `5_hoc_khong_giam_sat.ipynb` | So sánh TF-IDF gốc / hướng chủ đề → LSA → K-Means; chọn K bằng silhouette và độ ổn định, kiểm tra bài đại diện / ranh giới |
+| `5_hoc_khong_giam_sat.ipynb` | TF-IDF hướng chủ đề → LSA → K-Means; chọn K thủ công dựa trên các chỉ số, kiểm tra bài đại diện / ranh giới |
 | `text_preprocessing.py` | Hàm tiền xử lý **dùng chung** cho huấn luyện và dự đoán bài mới |
-| `topic_clustering.py` | Biểu diễn, chọn K không dùng nhãn, từ khóa có trọng số, bài đại diện và dự đoán chủ đề |
-| `tests/test_topic_clustering.py` | Kiểm tra quy tắc chọn K, trọng số từ khóa, định danh bài và đầu vào không có đặc trưng |
+| `topic_clustering.py` | Biểu diễn, khảo sát K không dùng nhãn, từ khóa có trọng số, bài đại diện và dự đoán chủ đề |
+| `tests/test_topic_clustering.py` | Kiểm tra trọng số từ khóa, định danh bài và đầu vào không có đặc trưng |
 | `data/raw/`, `data/upload/` | Dữ liệu gốc (`Fake.csv`, `True.csv`); `upload/` để đặt file zip tải tay nếu không tải được qua KaggleHub |
 | `data/processed/` | Dữ liệu đã tiền xử lý (sinh bởi notebook 3) |
 | `results/classification/`, `results/clustering/` | Bảng kết quả CSV (sinh bởi notebook 4, 5) |
@@ -122,33 +122,23 @@ python -m unittest discover -s tests -v
   Từ khóa lớp Fake: `video`, `watch`, `via`, `reportedly`, `gop`, nguồn dẫn lại (`via breitbart`, `wfb`, `nyp`), từ ngữ cảm xúc (`hilariously`).
   Phân tích chi tiết ở cuối notebook 4.
 
-**Phân cụm cải tiến** (TF-IDF unigram + bigram, lọc từ văn phong → LSA 100 chiều → K-Means):
-- Khảo sát K = 6, 8, 10, 12, 14, mỗi K chạy ba seed và `n_init=10`. Chọn K bằng cosine silhouette trong TF-IDF chung,
-  có điều kiện về độ ổn định và kích thước cụm; hoàn toàn không dùng nhãn Fake/True hay `subject` để chọn.
-- **K = 10** được chọn trên **38.820 bài**. Một bài chỉ kêu gọi xem video không còn đặc trưng, nhận `cluster=-1` và được ghi riêng.
-- So sánh trên cùng mẫu 3.000 bài, cùng độ chính xác float64 và 100 chiều LSA:
-
-| Chỉ số | Baseline TF-IDF gốc, K=10 | TF-IDF hướng chủ đề, K=10 |
-|---|---:|---:|
-| Cosine silhouette trong cùng TF-IDF hướng chủ đề | 0.01184 | 0.01234 |
-| Euclidean silhouette trong LSA của mỗi cấu hình | 0.05706 | 0.05791 |
-| ARI ổn định giữa ba seed | 0.9853 | 0.9889 |
-
-- Mức tăng silhouette **nhẹ**, chưa chứng minh chất lượng chủ đề tăng rõ rệt. K=12/14 có cosine silhouette trung bình cao hơn,
-  nhưng ARI ổn định chỉ khoảng 0.719/0.706, không đạt ngưỡng 0.75. Không chọn K chỉ vì điểm silhouette cao hơn.
+**Phân cụm theo chủ đề** (TF-IDF unigram + bigram, lọc từ văn phong → LSA 100 chiều → K-Means):
+- Khảo sát K = 6, 8, 10, 12, 14, mỗi K chạy ba seed và `n_init=10`. Hiển thị silhouette, độ ổn định ARI, tỷ lệ cụm và inertia để chọn K thủ công, giải thích lựa chọn; không dùng nhãn Fake/True hay `subject` để chọn.
+- Các số liệu sau thuộc lần chạy trước với **K = 10** trên **38.820 bài**; cần cập nhật sau khi chọn K và chạy lại notebook. Một bài không còn đặc trưng nhận `cluster=-1` và được ghi riêng.
+- Với mẫu 3.000 bài: cosine silhouette TF-IDF = **0.01234**, silhouette Euclidean LSA = **0.05791**, ARI ổn định giữa ba seed = **0.9889**.
+- Silhouette còn thấp, cho thấy chủ đề chồng lấn. K=12/14 có cosine silhouette trung bình cao hơn nhưng ARI ổn định chỉ khoảng 0.719/0.706; cần cân nhắc đồng thời các chỉ số khi chọn K.
 - Các nhóm dễ nhận diện gồm Trung Đông, Clinton/email, bầu cử sơ bộ Mỹ, cảnh sát, thuế/y tế, Nga–FBI, Triều Tiên và Châu Âu–Brexit.
   Vẫn còn các cụm chính trị–xã hội Mỹ và chính quyền/pháp luật/kinh tế khá rộng; cần đọc bài đại diện để kiểm tra.
 - Đối chiếu nhãn sau khi chốt mô hình: ARI ≈ 0.117, Cramér's V ≈ 0.643, purity ≈ 0.785 so với mốc ≈ 0.539.
   Những chỉ số này mô tả liên hệ với nhãn Fake/True, **không đo độ chính xác chủ đề**.
 
 Các đầu ra chính trong `results/clustering/`:
-- `comparison.csv`, `k_selection.csv`, `k_runs.csv`, `final_metrics.csv`: đối chứng, trung bình/độ lệch theo seed và điểm mô hình cuối.
+- `k_selection.csv`, `k_runs.csv`, `final_metrics.csv`: chỉ số tổng hợp theo K, kết quả từng seed và điểm mô hình đã chọn.
 - `cluster_summary.csv`, `cluster_keywords.csv`: từ khóa, trọng số TF-IDF, điểm tương phản và tỷ lệ bài chứa từ.
 - `representative_articles.csv`, `boundary_articles.csv`: ba bài gần tâm và hai bài gần ranh giới của mỗi cụm.
 - `cluster_articles.csv`, `excluded_articles.csv`: gán cụm theo `raw_id`, khoảng cách và margin; margin **không phải xác suất**.
 - `evaluation_sample.csv`, `run_config.json`, `topic_stop_words.txt`: mẫu đánh giá cố định và cấu hình để đối chiếu.
 - `k_selection.png`, `cluster_overview.png`: biểu đồ chọn K, kích thước cụm, PCA minh họa và silhouette theo cụm.
-- `baseline_previous/`: bảng kết quả trước khi sửa. `precision_float32/`: thử độ nhạy float32, lưu riêng với kết quả cuối float64.
 
 ## Hạn chế
 

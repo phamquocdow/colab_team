@@ -1,4 +1,4 @@
-"""Small regression checks for selection, reporting and empty-input behavior."""
+"""Small regression checks for reporting and empty-input behavior."""
 import unittest
 
 import numpy as np
@@ -10,22 +10,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import Normalizer
 
-from topic_clustering import article_tables, keyword_table, predict_topics, select_k
+from topic_clustering import article_tables, keyword_table, predict_topics
 
 
 class TopicClusteringTests(unittest.TestCase):
-    def test_selection_rejects_unstable_and_degenerate_solutions(self):
-        scores = pd.DataFrame({
-            "K": [6, 8, 10, 12],
-            "Silhouette TF-IDF cosine": [0.1, 0.0995, 0.5, 0.6],
-            "Stability ARI": [0.8, 0.95, 0.5, 0.99],
-            "Min cluster share": [0.02, 0.02, 0.02, 0.001],
-            "Max cluster share": [0.3, 0.3, 0.3, 0.3],
-        }).set_index("K")
-        self.assertEqual(select_k(scores), 8)
-        with self.assertRaises(ValueError):
-            select_k(scores, min_stability=1)
-
     def test_keyword_support_and_weight_export(self):
         matrix = csr_matrix([[1., 0, 1], [1., 0, 0], [0, 1., 0], [0, 1., 0]])
         table = keyword_table(matrix, np.array(["court", "korea", "rare"]),
